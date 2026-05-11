@@ -45,5 +45,7 @@ Cash, PayNow, CDC, Voucher (CDC/Voucher support split payments)
 - Z-Report: end of day, requires admin PIN, resets terminal
 
 ## Deployment
-Hosted on GitHub Pages at:
-https://YOUR-USERNAME.github.io/wtp-pos/
+Hosted on GitHub Pages:
+- POS (cashier): https://limyuanming2-eng.github.io/wtp-pos/index.html
+- Dashboard (owner): https://limyuanming2-eng.github.io/wtp-pos/dashboard.html
+- Repo: https://github.com/limyuanming2-eng/wtp-pos
