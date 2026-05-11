@@ -881,21 +881,49 @@ function selectPayMethod(method){
 function buildCashPresets(){
   const due=remainingDue;
   const btns=[{label:'Exact '+fmt(due),val:due}];
-  [5,10,50].forEach(v=>{if(v>due) btns.push({label:'$'+v,val:v});});
-  document.getElementById('cash-presets').innerHTML=btns.map(b=>
-    `<button class="cash-preset-btn" onclick="setCash(${b.val})">${b.label}</button>`
-  ).join('');
+  // Next whole dollar if amount has cents
+  const nextDollar=Math.ceil(due);
+  if(nextDollar>due) btns.push({label:'$'+nextDollar,val:nextDollar});
+  // Common Singapore note denominations above the amount
+  [10,20,50,100].forEach(v=>{if(v>due) btns.push({label:'$'+v,val:v});});
+  document.getElementById('cash-presets').innerHTML=
+    btns.map(b=>`<button class="cash-preset-btn" onclick="setCash(${b.val})">${b.label}</button>`).join('')+
+    `<div style="display:flex;align-items:center;gap:6px;flex-basis:100%;margin-top:4px">
+      <span style="font-size:12px;color:var(--text2);white-space:nowrap">Custom $</span>
+      <input id="cash-custom-input" type="number" min="0" step="0.10"
+        style="flex:1;padding:9px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:15px;font-family:monospace;outline:none;width:100%"
+        placeholder="${due.toFixed(2)}"
+        oninput="setCustomCash(this.value)"
+        onfocus="this.style.borderColor='var(--amber)'"
+        onblur="this.style.borderColor='var(--border2)'">
+    </div>`;
 }
 function setCash(amount){
   cashGiven=amount;
   document.querySelectorAll('.cash-preset-btn').forEach(b=>b.classList.remove('selected'));
   event.target.classList.add('selected');
+  const inp=document.getElementById('cash-custom-input');
+  if(inp) inp.value='';
   const change=amount-remainingDue;
   document.getElementById('change-display').style.display='flex';
   document.getElementById('change-amount').textContent=fmt(Math.max(0,change));
-  document.getElementById('pay-confirm-btn').disabled=amount<remainingDue;
-  // Trigger cash drawer
+  document.getElementById('pay-confirm-btn').disabled=false;
   openCashDrawer();
+}
+function setCustomCash(val){
+  const amount=parseFloat(val);
+  document.querySelectorAll('.cash-preset-btn').forEach(b=>b.classList.remove('selected'));
+  if(isNaN(amount)||amount<=0){
+    cashGiven=null;
+    document.getElementById('change-display').style.display='none';
+    document.getElementById('pay-confirm-btn').disabled=true;
+    return;
+  }
+  cashGiven=amount;
+  const change=amount-remainingDue;
+  document.getElementById('change-display').style.display='flex';
+  document.getElementById('change-amount').textContent=change>=0?fmt(change):'—';
+  document.getElementById('pay-confirm-btn').disabled=amount<remainingDue;
 }
 function openCashDrawer(){
   // Cash drawer opens via ESC/POS command through the receipt printer
