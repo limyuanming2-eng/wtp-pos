@@ -342,26 +342,35 @@ html,body{height:100%;background:#1a1a1a;font-family:'Segoe UI',system-ui,sans-s
 
 /* ---- PRINT / RECEIPT ---- */
 #receipt-print{display:none}
+@page{margin:0}
 @media print{
   body>*{display:none!important}
   #receipt-print{
     display:block!important;
-    font-family:'Courier New',monospace;
-    font-size:12pt;
+    font-family:'Courier New',Courier,monospace;
+    font-size:10pt;
     color:#000;
-    width:72mm;
-    margin:0 auto;
-    padding:4mm;
+    width:76mm;
+    padding:8mm 5mm 12mm;
+    line-height:1.45;
   }
-  .rp-center{text-align:center}
-  .rp-brand{font-size:15pt;font-weight:bold;margin-bottom:1mm}
-  .rp-sub{font-size:10pt;margin-bottom:1mm}
-  .rp-divider{border:none;border-top:1px dashed #000;margin:2mm 0}
-  .rp-row{display:flex;justify-content:space-between;margin-bottom:0.5mm;font-size:11pt}
-  .rp-row.bold{font-weight:bold}
-  .rp-row.indent{padding-left:4mm;font-size:10pt}
-  .rp-total{display:flex;justify-content:space-between;font-size:14pt;font-weight:bold;margin:2mm 0}
-  .rp-footer{text-align:center;font-size:9pt;margin-top:3mm}
+  .rp-head{text-align:center;padding-bottom:3mm}
+  .rp-brand{font-size:20pt;font-weight:bold;letter-spacing:0.5px;margin-bottom:1mm}
+  .rp-tag{font-size:8.5pt;color:#444;letter-spacing:0.5px}
+  .rp-sep{border:none;border-top:1.5px solid #000;margin:3mm 0}
+  .rp-dash{border:none;border-top:1px dashed #000;margin:3mm 0}
+  .rp-meta{text-align:center;font-size:9pt;color:#222;line-height:1.6;margin-bottom:3mm}
+  .rp-tbl{width:100%;border-collapse:collapse;font-size:10pt}
+  .rp-tbl td{padding:1.2mm 0;vertical-align:top}
+  .rp-tbl .rp-q{width:18pt;color:#444}
+  .rp-tbl .rp-n{padding-right:2mm}
+  .rp-tbl .rp-r{text-align:right;white-space:nowrap}
+  .rp-tbl .rp-sub-lbl{font-size:9.5pt;padding-top:1mm}
+  .rp-tbl .rp-disc{font-size:9pt;color:#444}
+  .rp-tbl .rp-tot td{font-size:14pt;font-weight:bold;padding:2mm 0}
+  .rp-tbl .rp-pay td{font-size:10pt;padding:1mm 0;text-transform:uppercase;letter-spacing:0.3px}
+  .rp-foot{text-align:center;font-size:9pt;color:#333;margin-top:4mm;line-height:1.7}
+  .rp-foot .rp-ref{font-size:8pt;color:#666;margin-top:1mm}
 }
 
 /* Running totals chip */
@@ -1001,29 +1010,43 @@ function endTransaction(payments){
 
 // ============ RECEIPT ============
 function buildReceiptHTML(txn){
-  const payStr=(txn.payments||[]).map(p=>
-    `<div class="rp-row indent"><span>${p.type.charAt(0).toUpperCase()+p.type.slice(1)}</span><span>${fmt(p.amount)}</span></div>`
-  ).join('');
-  const itemStr=(txn.items||[]).map(i=>
-    `<div class="rp-row indent"><span>${i.name} x${i.qty}</span><span>${fmt(i.sub)}</span></div>`
+  const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+  const itemRows=(txn.items||[]).map(i=>
+    `<tr><td class="rp-q">${i.qty}x</td><td class="rp-n">${i.name}</td><td class="rp-r">${fmt(i.sub)}</td></tr>`
   ).join('');
   const discRow=txn.discount>0
-    ?`<div class="rp-row"><span>Senior Disc. (10%)</span><span>-${fmt(txn.discount)}</span></div>`:'';
+    ?`<tr class="rp-disc"><td></td><td>Senior Disc (10%)</td><td class="rp-r">-${fmt(txn.discount)}</td></tr>`:'';
+  const payRows=(txn.payments||[]).map(p=>
+    `<tr class="rp-pay"><td colspan="2">${cap(p.type)}</td><td class="rp-r">${fmt(p.amount)}</td></tr>`
+  ).join('');
   return `
-    <div class="rp-center"><div class="rp-brand">What The Puff</div>
-    <div class="rp-sub">${txn.outlet}</div>
-    <div class="rp-sub">${txn.date} ${txn.time}</div></div>
-    <hr class="rp-divider">
-    ${itemStr}
-    <hr class="rp-divider">
-    <div class="rp-row"><span>Subtotal</span><span>${fmt(txn.subtotal)}</span></div>
-    ${discRow}
-    <div class="rp-total"><span>TOTAL</span><span>${fmt(txn.total)}</span></div>
-    <hr class="rp-divider">
-    ${payStr}
-    <hr class="rp-divider">
-    <div class="rp-row bold"><span>Order</span><span>${txn.id}</span></div>
-    <div class="rp-footer">Thank you! See you again :)<br>${txn.id}</div>`;
+    <div class="rp-head">
+      <div class="rp-brand">What The Puff</div>
+      <div class="rp-tag">hawker-fresh curry puffs</div>
+    </div>
+    <hr class="rp-sep">
+    <div class="rp-meta">
+      ${txn.outlet}<br>
+      ${txn.date} &nbsp; ${txn.time}<br>
+      Receipt: <strong>${txn.id}</strong>
+    </div>
+    <hr class="rp-dash">
+    <table class="rp-tbl">${itemRows}</table>
+    <hr class="rp-dash">
+    <table class="rp-tbl">
+      <tr class="rp-sub-lbl"><td colspan="2">Subtotal</td><td class="rp-r">${fmt(txn.subtotal)}</td></tr>
+      ${discRow}
+    </table>
+    <hr class="rp-sep">
+    <table class="rp-tbl"><tr class="rp-tot"><td colspan="2">TOTAL</td><td class="rp-r">${fmt(txn.total)}</td></tr></table>
+    <hr class="rp-sep">
+    <table class="rp-tbl">${payRows}</table>
+    <hr class="rp-dash">
+    <div class="rp-foot">
+      Thank you for your support!<br>
+      See you again soon ☕
+      <div class="rp-ref">${txn.id} &nbsp;·&nbsp; ${txn.date}</div>
+    </div>`;
 }
 function printReceipt(txn){
   document.getElementById('receipt-print').innerHTML=buildReceiptHTML(txn);
