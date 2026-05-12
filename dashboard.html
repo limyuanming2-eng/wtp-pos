@@ -444,12 +444,9 @@ function showToast(icon, msg) {
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
 // Dashboard PIN gate
-const DASH_PIN_HASH='888df25ae35772424a560c7152a1de794440e0ea5cfee62828333a456a506e05';
+const DASH_PIN_ENC=btoa('9999');
 let dashPinEntry='';
-async function hashDashPin(pin){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+function dashPinValid(input){ return btoa(input.split('').reverse().join(''))===DASH_PIN_ENC; }
 function dashUpdateDots(){
   for(let i=0;i<4;i++) document.getElementById('dpd'+i).classList.toggle('filled',i<dashPinEntry.length);
 }
@@ -460,9 +457,8 @@ function dashPin(d){
 }
 function dashPinDel(){ dashPinEntry=dashPinEntry.slice(0,-1); dashUpdateDots(); }
 function dashPinClear(){ dashPinEntry=''; dashUpdateDots(); }
-async function dashCheckPin(){
-  const h=await hashDashPin(dashPinEntry);
-  if(h===DASH_PIN_HASH){
+function dashCheckPin(){
+  if(dashPinValid(dashPinEntry)){
     document.getElementById('dash-gate').classList.add('hidden');
   } else {
     document.getElementById('dash-pin-error').textContent='Wrong PIN.';
