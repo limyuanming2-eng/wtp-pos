@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, orderBy, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const cfg = {
     apiKey:"AIzaSyAPCeTkc3cTqRNIDRhKQcpjrsUcckIUg68",
@@ -157,11 +157,12 @@
     document.getElementById('live-dot').style.background = '#4caf7d';
   }
 
-  // Real-time listener — try ordered first, fall back to unordered if index missing
+  // Real-time listener — fetch last 60 days only to limit Firestore reads
   function startListener(ordered) {
+    const cutoff = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
     const q = ordered
-      ? query(collection(db,'transactions'), orderBy('createdAt','desc'))
-      : collection(db,'transactions');
+      ? query(collection(db,'transactions'), where('timestamp','>=',cutoff), orderBy('timestamp','desc'))
+      : query(collection(db,'transactions'), where('timestamp','>=',cutoff));
 
     onSnapshot(q, snapshot => {
       allTransactions = [];

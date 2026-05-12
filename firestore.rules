@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /transactions/{txnId} {
+      // Dashboard and POS both need to read transactions
+      allow read: if true;
+
+      // POS can create new transactions — validate required fields and valid outlet
+      allow create: if request.resource.data.keys().hasAll([
+                        'txnId', 'date', 'time', 'outlet',
+                        'items', 'subtotal', 'total', 'payments', 'timestamp'
+                      ])
+                   && request.resource.data.outlet in ['Bedok 216', 'Haig Road', 'Punggol Coast']
+                   && request.resource.data.subtotal is number
+                   && request.resource.data.total is number
+                   && request.resource.data.subtotal >= 0
+                   && request.resource.data.total >= 0;
+
+      // Dashboard void: only allow setting voided=true + voidedAt, nothing else
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['voided', 'voidedAt'])
+                   && request.resource.data.voided == true;
+
+      // Never allow hard deletes
+      allow delete: if false;
+    }
+
+    // Block all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}
