@@ -713,19 +713,43 @@ function closeAdminModal(){
 
 // ============ OUTLET CHANGE ============
 function changeOutlet(){
-  requireAdmin('Change Outlet','Enter admin PIN to switch outlet',function(){
-    ['Bedok 216','Haig Road','Punggol Coast'].forEach(o=>{
-      const btn=document.getElementById('opick-'+o.replace(/ /g,'-'));
-      if(btn) btn.classList.toggle('active',o===currentOutlet);
-    });
-    document.getElementById('outlet-picker').classList.add('open');
-  });
+  requireAdmin('Change Outlet','Enter admin PIN to switch outlet', showOutletPicker);
 }
-function setOutlet(o){
-  currentOutlet=o;
-  document.getElementById('outlet-name-display').textContent=o;
-  document.getElementById('outlet-picker').classList.remove('open');
-  showToast('📍','Outlet: '+o);
+function showOutletPicker(){
+  const existing=document.getElementById('_opick');
+  if(existing) existing.remove();
+  const overlay=document.createElement('div');
+  overlay.id='_opick';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:800;display:flex;align-items:center;justify-content:center';
+  const modal=document.createElement('div');
+  modal.style.cssText='background:#242424;border:1px solid #484848;border-radius:14px;padding:24px;width:280px;display:flex;flex-direction:column;gap:10px;font-family:inherit';
+  const title=document.createElement('div');
+  title.textContent='Select Outlet';
+  title.style.cssText='font-size:15px;font-weight:600;color:#f0ede8;text-align:center;margin-bottom:4px';
+  modal.appendChild(title);
+  ['Bedok 216','Haig Road','Punggol Coast'].forEach(o=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    const active=o===currentOutlet;
+    btn.textContent=(active?'✓ ':'')+o;
+    btn.style.cssText='padding:14px;border-radius:8px;border:1px solid '+(active?'#e8a020':'#484848')+';background:'+(active?'#2a2010':'#2e2e2e')+';color:'+(active?'#f5c060':'#f0ede8')+';font-size:15px;cursor:pointer;touch-action:manipulation;font-family:inherit;width:100%';
+    btn.ontouchstart=function(e){e.preventDefault();e.stopPropagation();btn.click();};
+    btn.onclick=function(e){
+      e.stopPropagation();
+      currentOutlet=o;
+      document.getElementById('outlet-name-display').textContent=o;
+      overlay.remove();
+      showToast('📍','Outlet: '+o);
+    };
+    modal.appendChild(btn);
+  });
+  const cancel=document.createElement('div');
+  cancel.textContent='Cancel';
+  cancel.style.cssText='text-align:center;font-size:13px;color:#6a6460;cursor:pointer;padding:6px;margin-top:2px';
+  cancel.onclick=function(e){e.stopPropagation();overlay.remove();};
+  modal.appendChild(cancel);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
 }
 
 // ============ CLOCK ============
