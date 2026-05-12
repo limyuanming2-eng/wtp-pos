@@ -693,7 +693,7 @@ function checkAdminPin(){
   if(pinValid(adminPin,ADMIN_PIN_ENC)){
     adminPin='';
     // Transform the already-open modal into outlet selector in-place
-    document.getElementById('admin-pad').style.display='none';
+    document.querySelector('.admin-pad').style.display='none';
     document.getElementById('admin-pin-display').style.display='none';
     document.getElementById('admin-pin-error').textContent='';
     document.getElementById('admin-title').textContent='Select Outlet';
@@ -728,7 +728,7 @@ function closeAdminModal(){
   // Reset admin modal to default state
   const tmp=document.getElementById('outlet-sel-temp');
   if(tmp) tmp.remove();
-  document.getElementById('admin-pad').style.display='';
+  document.querySelector('.admin-pad').style.display='';
   document.getElementById('admin-pin-display').style.display='';
   document.getElementById('admin-title').textContent='Admin Access';
   document.getElementById('admin-sub').textContent='Enter admin PIN to continue';
