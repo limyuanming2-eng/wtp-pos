@@ -372,6 +372,16 @@ html,body{height:100%;background:#1a1a1a;font-family:'Segoe UI',system-ui,sans-s
   .rp-foot .rp-ref{font-size:8pt;color:#666;margin-top:1mm}
 }
 
+/* Outlet picker */
+.outlet-picker{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:700;align-items:center;justify-content:center}
+.outlet-picker.open{display:flex}
+.outlet-picker-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:24px;width:280px;display:flex;flex-direction:column;gap:10px}
+.outlet-picker-title{font-size:15px;font-weight:600;color:var(--text);text-align:center;margin-bottom:2px}
+.outlet-opt{padding:14px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:15px;cursor:pointer;touch-action:manipulation;transition:all 0.1s;text-align:center}
+.outlet-opt:hover,.outlet-opt.active{border-color:var(--amber);background:var(--amber-bg);color:var(--amber-light);font-weight:600}
+.outlet-picker-cancel{text-align:center;font-size:13px;color:var(--text3);cursor:pointer;padding:4px;margin-top:2px}
+.outlet-picker-cancel:hover{color:var(--text2)}
+
 /* Running totals chip */
 .topbar-stats{font-size:11px;color:var(--text3);font-family:monospace;background:var(--bg3);border:1px solid var(--border);padding:3px 8px;border-radius:var(--radius-sm);white-space:nowrap}
 @media(max-width:700px){.topbar-stats{display:none}}
@@ -452,6 +462,17 @@ html,body{height:100%;background:#1a1a1a;font-family:'Segoe UI',system-ui,sans-s
       <button type="button" class="admin-btn" ontouchstart="event.preventDefault();adminPinClear()" onclick="adminPinClear()">C</button>
     </div>
     <div class="admin-cancel" onclick="closeAdminModal()">Cancel</div>
+  </div>
+</div>
+
+<!-- OUTLET PICKER -->
+<div class="outlet-picker" id="outlet-picker" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="outlet-picker-modal">
+    <div class="outlet-picker-title">Select Outlet</div>
+    <button type="button" id="opick-Bedok-216"       class="outlet-opt" ontouchstart="event.preventDefault();setOutlet('Bedok 216')"       onclick="setOutlet('Bedok 216')">Bedok 216</button>
+    <button type="button" id="opick-Haig-Road"       class="outlet-opt" ontouchstart="event.preventDefault();setOutlet('Haig Road')"       onclick="setOutlet('Haig Road')">Haig Road</button>
+    <button type="button" id="opick-Punggol-Coast"   class="outlet-opt" ontouchstart="event.preventDefault();setOutlet('Punggol Coast')"   onclick="setOutlet('Punggol Coast')">Punggol Coast</button>
+    <div class="outlet-picker-cancel" onclick="document.getElementById('outlet-picker').classList.remove('open')">Cancel</div>
   </div>
 </div>
 
@@ -697,33 +718,18 @@ function closeAdminModal(){
 
 // ============ OUTLET CHANGE ============
 function changeOutlet(){
-  const tmp=document.getElementById('outlet-sel-temp');
-  if(tmp) tmp.remove();
-  document.getElementById('admin-pad').style.display='none';
-  document.getElementById('admin-pin-display').style.display='none';
-  document.getElementById('admin-pin-error').textContent='';
-  document.getElementById('admin-title').textContent='Select Outlet';
-  document.getElementById('admin-sub').textContent='Tap an outlet to switch';
-  const outlets=['Bedok 216','Haig Road','Punggol Coast'];
-  const sel=document.createElement('div');
-  sel.style.cssText='display:flex;flex-direction:column;gap:10px;width:100%;';
-  outlets.forEach(o=>{
-    const btn=document.createElement('button');
-    btn.type='button';
-    btn.textContent=(o===currentOutlet?'✓ ':'')+o;
-    btn.style.cssText='padding:14px;border-radius:8px;border:1px solid '+(o===currentOutlet?'var(--amber)':'var(--border2)')+';background:'+(o===currentOutlet?'var(--amber-bg)':'var(--bg3)')+';color:'+(o===currentOutlet?'var(--amber-light)':'var(--text)')+';font-size:15px;cursor:pointer;touch-action:manipulation;';
-    btn.ontouchstart=function(e){e.preventDefault();};
-    btn.onclick=function(){
-      currentOutlet=o;
-      document.getElementById('outlet-name-display').textContent=currentOutlet;
-      closeAdminModal();
-      showToast('📍','Outlet: '+currentOutlet);
-    };
-    sel.appendChild(btn);
+  // Highlight current outlet
+  ['Bedok 216','Haig Road','Punggol Coast'].forEach(o=>{
+    const btn=document.getElementById('opick-'+o.replace(/ /g,'-'));
+    if(btn) btn.classList.toggle('active',o===currentOutlet);
   });
-  sel.id='outlet-sel-temp';
-  document.querySelector('.admin-modal').appendChild(sel);
-  document.getElementById('admin-overlay').classList.add('open');
+  document.getElementById('outlet-picker').classList.add('open');
+}
+function setOutlet(o){
+  currentOutlet=o;
+  document.getElementById('outlet-name-display').textContent=o;
+  document.getElementById('outlet-picker').classList.remove('open');
+  showToast('📍','Outlet: '+o);
 }
 
 // ============ CLOCK ============
